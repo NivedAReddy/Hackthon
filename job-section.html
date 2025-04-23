@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASU JobSwipe</title>
+
+<!-- Global Styles -->
+<style>
+:root{
+  --bg:          #8C1D40; /* ASU Maroon */
+  --phone:       #0f0f0f;
+  --primary-txt: #ffffff;
+  --accent:      #FFC627; /* ASU Gold */
+  --no:          #ff5964;
+  --fav:         #42a5f5;
+  --yes:         #29c46d;
+  --reload:      #FFC627; /* ASU Gold */
+  --card-bg:     #ffffff;
+  --txt-dark:    #111827;
+  --txt-light:   #6b7280;
+  --shadow:      0 6px 20px rgba(0,0,0,.15);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+/* phone frame */
+.phone{
+  width:320px;height:640px;
+  background:var(--phone);
+  border-radius:36px;
+  padding:60px 16px 90px;
+  position:relative;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top notch */
+.phone::before{
+  content:"";position:absolute;
+  top:20px;left:50%;margin-left:-70px;
+  width:140px;height:20px;
+  background:#0a0a0a;border-radius:10px;
+}
+
+/* top nav with back button */
+.nav{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-txt);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.page-title {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.app-title {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 40px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.menu-button {
+  background: var(--accent);
+  color: var(--phone);
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.menu-button:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.footer {
+  position: absolute;
+  bottom: 25px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--primary-txt);
+  opacity: 0.8;
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- top nav with back button -->
+  <div class="nav">
+    <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+    <h2 class="page-title">Jobs</h2>
+    <div style="width: 20px;"></div> <!-- empty space for symmetry -->
+  </div>
+
+  <h1 class="app-title">ASU JobSwipe</h1>
+  
+  <div class="menu-container">
+    <button class="menu-button" onclick="window.location.href='job-search.html'">Job Search</button>
+    <button class="menu-button" onclick="window.location.href='added-jobs.html'">Added Jobs</button>
+    <button class="menu-button" onclick="window.location.href='favorite-jobs.html'">Favorite Jobs</button>
+  </div>
+  
+  <div class="footer">
+    Arizona State University © 2025
+  </div>
+</div>
+
+</body>
+</html>

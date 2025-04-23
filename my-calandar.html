@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASU Events - My Calendar</title>
+
+<!-- Global Styles -->
+<style>
+:root{
+  --bg:          #8C1D40; /* ASU Maroon */
+  --phone:       #0f0f0f;
+  --primary-txt: #ffffff;
+  --accent:      #FFC627; /* ASU Gold */
+  --no:          #ff5964;
+  --fav:         #42a5f5;
+  --yes:         #29c46d;
+  --reload:      #FFC627; /* ASU Gold */
+  --card-bg:     #ffffff;
+  --txt-dark:    #111827;
+  --txt-light:   #6b7280;
+  --shadow:      0 6px 20px rgba(0,0,0,.15);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+/* phone frame */
+.phone{
+  width:320px;height:640px;
+  background:var(--phone);
+  border-radius:36px;
+  padding:60px 16px 90px;
+  position:relative;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top notch */
+.phone::before{
+  content:"";position:absolute;
+  top:20px;left:50%;margin-left:-70px;
+  width:140px;height:20px;
+  background:#0a0a0a;border-radius:10px;
+}
+
+/* top nav with back button */
+.nav{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-txt);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.page-title {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+/* calendar */
+.calendar-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.month-header {
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 15px 0 10px 0;
+  text-align: center;
+}
+
+.calendar-event {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--accent);
+}
+
+.calendar-event h4 {
+  font-size: 1rem;
+  color: var(--txt-dark);
+}
+
+.calendar-event p {
+  font-size: .78rem;
+  color: var(--txt-light);
+  margin: .35rem 0;
+}
+
+.remove-btn {
+  margin-top: .5rem;
+  padding: .4rem .8rem;
+  background: var(--no);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: .8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.no-events-message {
+  color: var(--primary-txt);
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1rem;
+}
+
+.chat-button {
+  position: fixed;
+  bottom: 140px;
+  right: 40px;
+  background-color: var(--accent);
+  color: var(--phone);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- top nav with back button -->
+  <div class="nav">
+    <button class="back-btn" onclick="window.location.href='events-section.html'">←</button>
+    <h2 class="page-title">My Calendar</h2>
+    <div style="width: 20px;"></div> <!-- empty space for symmetry -->
+  </div>
+
+  <!-- Calendar Events -->
+  <div class="calendar-container">
+    <div id="calendarList"></div>
+  </div>
+  
+  <button class="chat-button">💬</button>
+</div>
+
+<!-- JS -->
+<script>
+// Load calendar events from localStorage
+function loadCalendarEvents() {
+  const calData = localStorage.getItem('calendarEvents');
+  
+  if (calData) {
+    return JSON.parse(calData);
+  }
+  
+  return [];
+}
+
+// Save data to localStorage
+function saveData(calendarEvents) {
+  localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+}
+
+// Get month from date string
+function getMonth(dateString) {
+  if (dateString.includes("April")) return "April";
+  if (dateString.includes("May")) return "May";
+  if (dateString.includes("June")) return "June";
+  if (dateString.includes("July")) return "July";
+  if (dateString.includes("August")) return "August";
+  return "Upcoming";
+}
+
+// Group events by month
+function groupByMonth(events) {
+  const grouped = {};
+  
+  events.forEach(event => {
+    const month = getMonth(event.date);
+    if (!grouped[month]) {
+      grouped[month] = [];
+    }
+    grouped[month].push(event);
+  });
+  
+  return grouped;
+}
+
+// Sort events by date
+function sortEventsByDate(events) {
+  return events.sort((a, b) => {
+    const dateA = a.date.match(/\w+ \d+/)[0]; // Extract "Month Day" format
+    const dateB = b.date.match(/\w+ \d+/)[0];
+    return new Date(dateA) - new Date(dateB);
+  });
+}
+
+// Render the calendar
+function renderCalendar() {
+  const calendarEvents = loadCalendarEvents();
+  const calendarList = document.getElementById('calendarList');
+  
+  if (calendarEvents.length === 0) {
+    calendarList.innerHTML = `
+      <div class="no-events-message">
+        <p>Your calendar is empty.</p>
+        <p>Add events to see them here!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Group and sort events
+  const groupedEvents = groupByMonth(calendarEvents);
+  const months = Object.keys(groupedEvents);
+  
+  // Create HTML
+  let html = '';
+  
+  months.forEach(month => {
+    const sortedEvents = sortEventsByDate(groupedEvents[month]);
+    
+    html += `<h3 class="month-header">${month} 2025</h3>`;
+    
+    sortedEvents.forEach((event, index) => {
+      html += `
+        <div class="calendar-event">
+          <h4>${event.title}</h4>
+          <p>${event.date}</p>
+          <p><i>${event.location}</i></p>
+          <button class="remove-btn" data-month="${month}" data-index="${index}">Remove</button>
+        </div>
+      `;
+    });
+  });
+  
+  calendarList.innerHTML = html;
+  
+  // Add event listeners to remove buttons
+  document.querySelectorAll('.remove-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const month = this.getAttribute('data-month');
+      const index = parseInt(this.getAttribute('data-index'));
+      
+      // Remove the event
+      const calendarEvents = loadCalendarEvents();
+      const monthEvents = groupByMonth(calendarEvents)[month];
+      const eventToRemove = sortEventsByDate(monthEvents)[index];
+      
+      // Find and remove from the original array
+      const eventIndex = calendarEvents.findIndex(e => 
+        e.title === eventToRemove.title && e.date === eventToRemove.date
+      );
+      
+      if (eventIndex !== -1) {
+        calendarEvents.splice(eventIndex, 1);
+        saveData(calendarEvents);
+        renderCalendar();
+      }
+    });
+  });
+}
+
+// Initialize the page
+renderCalendar();
+</script>
+</body>
+</html>

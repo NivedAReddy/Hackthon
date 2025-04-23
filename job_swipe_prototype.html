@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JobSwipe Prototype</title>
+
+<!-- ───────────  GLOBAL STYLES  ─────────── -->
+<style>
+:root{
+  --bg:          #e9ecf4;
+  --phone:       #0f0f0f;
+  --primary-txt: #ffffff;
+  --accent:      #00c897;
+  --no:          #ff5964;
+  --fav:         #42a5f5;
+  --yes:         #29c46d;
+  --reload:      #f5c518;
+  --card-bg:     #ffffff;
+  --txt-dark:    #111827;
+  --txt-light:   #6b7280;
+  --shadow:      0 6px 20px rgba(0,0,0,.15);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+/* ---- phone frame ---- */
+.phone{
+  width:320px;height:640px;
+  background:var(--phone);
+  border-radius:36px;
+  padding:60px 16px 90px;
+  position:relative;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top notch */
+.phone::before{
+  content:"";position:absolute;
+  top:20px;left:50%;margin-left:-70px;
+  width:140px;height:20px;
+  background:#0a0a0a;border-radius:10px;
+}
+
+/* ---- top nav ---- */
+.nav{
+  position:absolute;top:60px;right:16px;
+  display:flex;gap:.5rem;z-index:10;
+}
+.nav button{
+  background:transparent;border:none;
+  color:var(--primary-txt);
+  font-weight:600;font-size:.9rem;
+  cursor:pointer;opacity:.6;
+}
+.nav .active{opacity:1}
+.nav button:focus{outline:none}
+
+/* ---- card view ---- */
+#browseView,#savedView{flex:1;overflow:hidden}
+
+.card{
+  background:var(--card-bg);
+  width:100%;height:100%;
+  border-radius:20px;
+  padding:20px 18px 110px;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow);
+}
+
+.job-title{font-size:1.25rem;font-weight:700;color:var(--txt-dark)}
+.company{font-size:.9rem;color:var(--txt-light);margin-top:2px}
+.desc{font-size:.85rem;color:var(--txt-light);margin-top:12px;line-height:1.35;white-space:pre-line}
+
+.hidden{display:none}
+
+/* ---- action bar ---- */
+.actions{
+  position:absolute;bottom:25px;left:50%;
+  width:260px;display:flex;justify-content:space-between;
+  transform:translateX(-50%);
+}
+.btn{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:#fff;cursor:pointer;user-select:none;
+  transition:transform .15s;border:none;
+}
+.btn:active{transform:scale(.88)}
+.no{background:var(--no)}
+.reload{background:var(--reload)}
+.fav{background:var(--fav)}
+.yes{background:var(--yes)}
+
+/* ---- saved list ---- */
+.saved-item{
+  background:var(--card-bg);border-radius:12px;
+  padding:14px;margin-bottom:12px;box-shadow:var(--shadow);
+}
+.saved-item h4{font-size:1rem;color:var(--txt-dark)}
+.saved-item p{font-size:.78rem;color:var(--txt-light);margin:.35rem 0}
+.apply{
+  margin-top:.5rem;padding:.4rem .8rem;
+  background:var(--accent);color:#fff;border:none;
+  border-radius:6px;font-size:.8rem;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- top tab nav -->
+  <div class="nav">
+    <button id="browseBtn" class="active">Browse</button>
+    <button id="savedBtn">Saved</button>
+  </div>
+
+  <!-- BROWSE VIEW -->
+  <div id="browseView">
+    <div id="cardContainer"></div>
+
+    <div class="actions">
+      <button class="btn no"      id="noBtn">✕</button>
+      <button class="btn reload"  id="reloadBtn">⟲</button>
+      <button class="btn fav"     id="favBtn">★</button>
+      <button class="btn yes"     id="yesBtn">✓</button>
+    </div>
+  </div>
+
+  <!-- SAVED VIEW -->
+  <div id="savedView" class="hidden" style="overflow-y:auto;padding-right:4px;">
+    <div id="savedList" style="margin-top:10px;"></div>
+  </div>
+
+</div>
+
+<!-- ───────────  DATA + JS  ─────────── -->
+<script>
+/*  60 example jobs (title, company+loc, description)  */
+const jobs = [
+  {t:"Software Engineering Intern", c:"Google · Mountain View, CA",
+   d:`Build scalable products touching billions.\n\nMinimum Requirements:\n• CS major (BSc/MS)\n• Solid in Java / C++\n• Data structures & algorithms\n• GPA ≥ 3.3`} ,
+  {t:"Data Analyst Co‑op", c:"Spotify · New York, NY",
+   d:`Mine streaming datasets, craft dashboards, shape insights.\n\nMinimum Requirements:\n• SQL & Python (pandas)\n• Basic stats / A‑B testing\n• Tableau or PowerBI experience`} ,
+  {t:"UX Design Intern", c:"Adobe · Remote",
+   d:`Design intuitive, accessible workflows for Creative Cloud.\n\nMinimum Requirements:\n• UI/UX portfolio\n• Figma / Sketch mastery\n• Understanding of WCAG 2.1`},
+  {t:"Marketing Assistant", c:"Nike · Beaverton, OR",
+   d:`Assist global campaign launches & social engagement tracking.\n\nMinimum Requirements:\n• Marketing/Comms major\n• Adobe CC basics\n• Social analytics familiarity`},
+  {t:"Finance Summer Analyst", c:"Goldman Sachs · New York, NY",
+   d:`Support trading desk with real‑time analytics.\n\nMinimum Requirements:\n• Excel & VBA\n• Basic macro‑economics\n• Quantitative mindset`},
+  {t:"Mechanical Engineering Intern", c:"Tesla · Fremont, CA",
+   d:`Design manufacturing fixtures for next‑gen battery lines.\n\nMinimum Requirements:\n• 3D CAD (SolidWorks)\n• GD&T knowledge\n• Hands‑on prototyping`},
+  {t:"Product Management Intern", c:"Amazon · Seattle, WA",
+   d:`Own an Alexa feature from concept to launch.\n\nMinimum Requirements:\n• CS/Bus degree\n• Strong written docs\n• SQL basics`},
+  {t:"Graphic Design Intern", c:"Canva · Sydney, AU",
+   d:`Create fresh template packs used by millions.\n\nMinimum Requirements:\n• Adobe / Canva proficiency\n• Strong typography sense`},
+  {t:"Civil Engineering Co‑op", c:"Bechtel · Houston, TX",
+   d:`Support infrastructure planning on energy projects.\n\nMinimum Requirements:\n• AutoCAD / Revit\n• Surveying basics`},
+  {t:"Cybersecurity Intern", c:"Cisco · San Jose, CA",
+   d:`Monitor threat intel & build response playbooks.\n\nMinimum Requirements:\n• Networking fundamentals\n• Linux CLI skills`},
+  {t:"Biomedical Research Intern", c:"Mayo Clinic · Rochester, MN",
+   d:`Assist wet‑lab assays for regenerative medicine.\n\nMinimum Requirements:\n• Cell culture knowledge\n• Lab safety certified`},
+  {t:"Renewable Materials Intern", c:"IKEA · Älmhult, SE",
+   d:`Research sustainable wood alternatives.\n\nMinimum Requirements:\n• Material science coursework\n• Report‑writing skills`},
+  {t:"Esports Production Intern", c:"Riot Games · Los Angeles, CA",
+   d:`Support live tournament broadcasts.\n\nMinimum Requirements:\n• Obs/production tools\n• Passion for esports`},
+  {t:"Front‑End Developer Intern", c:"Meta · Menlo Park, CA",
+   d:`Implement UI components for Facebook groups.\n\nMinimum Requirements:\n• React & TypeScript\n• CSS‑in‑JS familiarity`},
+  {t:"Supply‑Chain Analyst", c:"Procter & Gamble · Cincinnati, OH",
+   d:`Optimize FMCG logistics flows.\n\nMinimum Requirements:\n• Excel modeling\n• SAP exposure`},
+  {t:"Game Design Intern", c:"Nintendo · Redmond, WA",
+   d:`Storyboard & balance new gameplay mechanics.\n\nMinimum Requirements:\n• Unity/Unreal basics\n• Portfolio of prototypes`},
+  {t:"AR/VR Research Intern", c:"Apple · Cupertino, CA",
+   d:`Prototype spatial‑computing interfaces.\n\nMinimum Requirements:\n• C#/Swift\n• Linear algebra`},
+  {t:"Environmental Policy Intern", c:"UN Environment · Geneva, CH",
+   d:`Assist drafting climate‑adaptation briefs.\n\nMinimum Requirements:\n• Policy analysis\n• Excellent writing`},
+  {t:"Quantitative Trader Intern", c:"Jane Street · New York, NY",
+   d:`Develop & back‑test trading strategies.\n\nMinimum Requirements:\n• Python / C++\n• Probability theory`},
+  {t:"Content Writer", c:"Airbnb · Remote",
+   d:`Craft host success guides & emails.\n\nMinimum Requirements:\n• English major\n• SEO basics`},
+  /* ---------- 40 more quick‑fire entries ---------- */
+  {t:"DevOps Intern",c:"Atlassian · Sydney, AU",d:`Automate CI/CD pipelines.\n\nMin Req:\n• Docker & Git\n• Bash scripting`},
+  {t:"HR Generalist Intern",c:"Netflix · Los Gatos, CA",d:`Support talent onboarding.\n\nMin Req:\n• People skills\n• HRIS familiarity`},
+  {t:"Journalism Fellow",c:"BBC · London, UK",d:`Contribute to digital newsroom.\n\nMin Req:\n• AP style\n• Video editing`},
+  {t:"Mechanical Design Co‑op",c:"Boeing · Charleston, SC",d:`Draft 787 structural parts.\n\nMin Req:\n• CATIA V5\n• Finite element basics`},
+  {t:"IT Support Intern",c:"Dell · Austin, TX",d:`Troubleshoot internal tickets.\n\nMin Req:\n• Windows & Mac OS\n• Customer service`},
+  {t:"Legal Intern",c:"Tesla · Palo Alto, CA",d:`Research IP & contract law.\n\nMin Req:\n• 1L/2L JD\n• Excellent writing`},
+  {t:"Data Science Intern",c:"LinkedIn · Sunnyvale, CA",d:`Predict member churn.\n\nMin Req:\n• Python ML libs\n• SQL`},
+  {t:"Architectural Intern",c:"Gensler · Chicago, IL",d:`Assist design charrettes.\n\nMin Req:\n• Rhino / Grasshopper\n• Revit docs`},
+  {t:"Digital Marketing Intern",c:"Shopify · Ottawa, CA",d:`Optimize PPC & email funnels.\n\nMin Req:\n• Google Ads\n• Analytics mindset`},
+  {t:"Business Analyst",c:"McKinsey · New York, NY",d:`Analyze client ops.\n\nMin Req:\n• PowerPoint\n• Quant skills`},
+  {t:"Chemistry Lab Intern",c:"BASF · Ludwigshafen, DE",d:`Synthesize polymer samples.\n\nMin Req:\n• Lab safety\n• IR/NMR basics`},
+  {t:"Cloud Engineering Intern",c:"Microsoft · Redmond, WA",d:`Build Azure tooling.\n\nMin Req:\n• C#/Go\n• REST APIs`},
+  {t:"Editorial Intern",c:"Penguin Random House · NY, NY",d:`Evaluate manuscript submissions.\n\nMin Req:\n• Literary skills\n• Proofreading`},
+  {t:"Gesture AI Intern",c:"LeapMotion · San Francisco, CA",d:`Train hand‑tracking models.\n\nMin Req:\n• PyTorch\n• 3D math`},
+  {t:"Robotics Co‑op",c:"Boston Dynamics · Waltham, MA",d:`Integrate perception sensors.\n\nMin Req:\n• ROS\n• C++`},
+  {t:"VR Sound Designer",c:"Valve · Bellevue, WA",d:`Create immersive audio assets.\n\nMin Req:\n• FMOD/Wwise\n• DAW mastery`},
+  {t:"Social Impact Intern",c:"Patagonia · Ventura, CA",d:`Measure supply‑chain footprint.\n\nMin Req:\n• LCA methods\n• CSR interest`},
+  {t:"Fashion Merchandising",c:"Zara · A Coruña, ES",d:`Forecast trends & plan assortments.\n\nMin Req:\n• Excel\n• Trend research`},
+  {t:"Customer Success Intern",c:"Zoom · Remote",d:`Onboard enterprise clients.\n\nMin Req:\n• Presentation skills\n• SaaS background`},
+  {t:"Energy Storage R&D",c:"LG Chem · Seoul, KR",d:`Test Li‑ion battery chemistries.\n\nMin Req:\n• Electrochemistry\n• Lab instrumentation`},
+  {t:"Public Relations Intern",c:"Disney · Burbank, CA",d:`Draft press releases.\n\nMin Req:\n• Comms major\n• Storytelling`},
+  {t:"Agronomy Intern",c:"John Deere · Moline, IL",d:`Conduct field crop trials.\n\nMin Req:\n• Soil science\n• Data logging`},
+  {t:"Marine Biology Intern",c:"NOAA · Miami, FL",d:`Tag & track reef species.\n\nMin Req:\n• SCUBA cert\n• R or Python`},
+  {t:"Sports Analytics",c:"NBA · Secaucus, NJ",d:`Model player performance.\n\nMin Req:\n• SQL\n• Machine learning`},
+  {t:"Video Editing Intern",c:"BuzzFeed · LA, CA",d:`Cut viral video content.\n\nMin Req:\n• Premiere Pro\n• Fast turnaround`},
+  {t:"Advertising Copywriter",c:"Ogilvy · Chicago, IL",d:`Concept & write taglines.\n\nMin Req:\n• Creative portfolio\n• Client briefs`},
+  {t:"Operations Intern",c:"SpaceX · Hawthorne, CA",d:`Streamline part logistics.\n\nMin Req:\n• SQL\n• Lean principles`},
+  {t:"Food Science Intern",c:"Nestlé · Vevey, CH",d:`Develop plant‑based recipes.\n\nMin Req:\n• Chemistry background\n• Sensory testing`},
+  {t:"VR Education Content",c:"Coursera · Remote",d:`Design 360° learning modules.\n\nMin Req:\n• Storyboarding\n• EdTech interest`},
+  {t:"AI Ethics Researcher",c:"OpenAI · San Francisco, CA",d:`Study fairness in LLMs.\n\nMin Req:\n• ML + philosophy coursework`},
+  {t:"GIS Analyst",c:"ESRI · Redlands, CA",d:`Build geospatial dashboards.\n\nMin Req:\n• ArcGIS Pro\n• Python arcpy`},
+  {t:"Industrial Design Intern",c:"Dyson · Malmesbury, UK",d:`Prototype new appliances.\n\nMin Req:\n• CAD + sketching`},
+  {t:"VR Healthcare UX",c:"Medtronic · Dublin, IE",d:`Design surgeon training sims.\n\nMin Req:\n• Unity UI\n• Medical knowledge`},
+  {t:"Ocean Engineering",c:"Shell · Houston, TX",d:`Model deep‑sea structures.\n\nMin Req:\n• CFD tools\n• Structural analysis`},
+  {t:"Photonics Intern",c:"Intel · Hillsboro, OR",d:`Test silicon photonics chips.\n\nMin Req:\n• Optics coursework`},
+  {t:"Park Ranger Intern",c:"NPS · Yellowstone, WY",d:`Lead educational tours.\n\nMin Req:\n• Public speaking`},
+  {t:"Radio Astronomy",c:"NRAO · Socorro, NM",d:`Process VLA data.\n\nMin Req:\n• Python\n• Signal processing`},
+  {t:"Urban Planning",c:"NYC DOT · New York, NY",d:`Draft bike‑lane proposals.\n\nMin Req:\n• GIS\n• Policy research`},
+  {t:"Micro‑finance Analyst",c:"Kiva · San Francisco, CA",d:`Evaluate loan impact.\n\nMin Req:\n• Financial modeling`},
+  {t:"VR Game QA",c:"Oculus · Seattle, WA",d:`Test new VR titles.\n\nMin Req:\n• Bug reporting`},
+  {t:"Quantum Computing",c:"IBM Q · Yorktown, NY",d:`Optimize circuits.\n\nMin Req:\n• Qiskit\n• Linear algebra`},
+  {t:"Pet Nutrition R&D",c:"Mars Petcare · Nashville, TN",d:`Formulate new kibble.\n\nMin Req:\n• Animal science`},
+  {t:"Climate Data Analyst",c:"NOAA · Boulder, CO",d:`Analyze satellite trends.\n\nMin Req:\n• Python xarray`},
+  {t:"Industrial Hygiene",c:"3M · St Paul, MN",d:`Evaluate workplace hazards.\n\nMin Req:\n• OSHA regs`},
+  {t:"Human‑Robot Interaction",c:"MIT Media Lab · Cambridge, MA",d:`Run HRI user studies.\n\nMin Req:\n• Statistics\n• C++/Python`},
+  {t:"Music A&R Scout",c:"Universal · LA, CA",d:`Find emerging artists.\n\nMin Req:\n• Music trend sense`},
+  {t:"Sustainability Analyst",c:"Starbucks · Seattle, WA",d:`Track carbon metrics.\n\nMin Req:\n• LCA tools\n• Excel`},
+  {t:"Intern – Renewable Policy",c:"EDF · Paris, FR",d:`Model solar incentives.\n\nMin Req:\n• Energy markets`},
+  {t:"Backend Go Developer",c:"Cloudflare · Remote",d:`Build high‑perf APIs.\n\nMin Req:\n• Go\n• Redis/Postgres`},
+  {t:"Speech‑to‑Text NLP",c:"DeepMind · London, UK",d:`Train ASR models.\n\nMin Req:\n• PyTorch\n• Phonetics basics`}
+];
+
+/* -------------   STATE  ---------------- */
+let index = 0;
+const saved = []; // array of job objects saved
+
+/* ----------  DOM refs  ---------- */
+const cardContainer = document.getElementById('cardContainer');
+const savedList     = document.getElementById('savedList');
+const browseView    = document.getElementById('browseView');
+const savedView     = document.getElementById('savedView');
+const browseBtn     = document.getElementById('browseBtn');
+const savedBtn      = document.getElementById('savedBtn');
+
+/* ----------  helpers  ---------- */
+function renderCard() {
+  const job = jobs[index];
+  cardContainer.innerHTML = `
+    <div class="card">
+      <h2 class="job-title">${job.t}</h2>
+      <p class="company">${job.c}</p>
+      <p class="desc">${job.d}</p>
+    </div>`;
+}
+
+function renderSaved() {
+  savedList.innerHTML = saved.map(j=>`
+    <div class="saved-item">
+      <h4>${j.t}</h4>
+      <p>${j.c}</p>
+      <button class="apply">Apply</button>
+    </div>`).join('');
+}
+
+function nextCard(){
+  index = (index+1) % jobs.length;
+  renderCard();
+}
+
+/* ----------  event handlers  ---------- */
+document.getElementById('yesBtn').onclick = ()=>{
+  saved.push(jobs[index]);
+  renderSaved();
+  nextCard();
+};
+document.getElementById('noBtn').onclick = nextCard;
+document.getElementById('favBtn').onclick = nextCard;
+document.getElementById('reloadBtn').onclick = renderCard;
+
+/* tab switches */
+browseBtn.onclick = ()=>{
+  browseBtn.classList.add('active'); savedBtn.classList.remove('active');
+  browseView.classList.remove('hidden'); savedView.classList.add('hidden');
+};
+savedBtn.onclick = ()=>{
+  savedBtn.classList.add('active'); browseBtn.classList.remove('active');
+  savedView.classList.remove('hidden'); browseView.classList.add('hidden');
+};
+
+/* init */
+renderCard();
+</script>
+</body>
+</html>

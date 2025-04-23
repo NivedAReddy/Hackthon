@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASU JobSwipe - Added Jobs</title>
+
+<!-- Global Styles -->
+<style>
+:root{
+  --bg:          #8C1D40; /* ASU Maroon */
+  --phone:       #0f0f0f;
+  --primary-txt: #ffffff;
+  --accent:      #FFC627; /* ASU Gold */
+  --no:          #ff5964;
+  --fav:         #42a5f5;
+  --yes:         #29c46d;
+  --reload:      #FFC627; /* ASU Gold */
+  --card-bg:     #ffffff;
+  --txt-dark:    #111827;
+  --txt-light:   #6b7280;
+  --shadow:      0 6px 20px rgba(0,0,0,.15);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+/* phone frame */
+.phone{
+  width:320px;height:640px;
+  background:var(--phone);
+  border-radius:36px;
+  padding:60px 16px 90px;
+  position:relative;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top notch */
+.phone::before{
+  content:"";position:absolute;
+  top:20px;left:50%;margin-left:-70px;
+  width:140px;height:20px;
+  background:#0a0a0a;border-radius:10px;
+}
+
+/* top nav with back button */
+.nav{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-txt);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.page-title {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+/* saved list */
+.jobs-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.saved-item {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.saved-item h4 {
+  font-size: 1rem;
+  color: var(--txt-dark);
+}
+
+.saved-item p {
+  font-size: .78rem;
+  color: var(--txt-light);
+  margin: .35rem 0;
+}
+
+.apply {
+  margin-top: .5rem;
+  padding: .4rem .8rem;
+  background: var(--accent);
+  color: var(--txt-dark);
+  border: none;
+  border-radius: 6px;
+  font-size: .8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.no-jobs-message {
+  color: var(--primary-txt);
+  text-align: center;
+  margin-top: 40px;
+  font-size: 1rem;
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- top nav with back button -->
+  <div class="nav">
+    <button class="back-btn" onclick="window.location.href='job-section.html'">←</button>
+    <h2 class="page-title">Added Jobs</h2>
+    <div style="width: 20px;"></div> <!-- empty space for symmetry -->
+  </div>
+
+  <!-- Jobs List -->
+  <div class="jobs-container">
+    <div id="jobsList"></div>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+// Load saved jobs from localStorage
+function loadSavedJobs() {
+  const savedData = localStorage.getItem('savedJobs');
+  
+  if (savedData) {
+    return JSON.parse(savedData);
+  }
+  
+  return [];
+}
+
+// Render the list of saved jobs
+function renderSavedJobs() {
+  const savedJobs = loadSavedJobs();
+  const jobsList = document.getElementById('jobsList');
+  
+  if (savedJobs.length === 0) {
+    jobsList.innerHTML = `
+      <div class="no-jobs-message">
+        <p>You haven't added any jobs yet.</p>
+        <p>Swipe right on jobs you're interested in!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  jobsList.innerHTML = savedJobs.map(job => `
+    <div class="saved-item">
+      <h4>${job.t}</h4>
+      <p>${job.c}</p>
+      <p>${job.d.split('\n\n')[0]}</p>
+      <button class="apply">Apply</button>
+    </div>
+  `).join('');
+}
+
+// Initialize the page
+renderSavedJobs();
+</script>
+</body>
+</html>

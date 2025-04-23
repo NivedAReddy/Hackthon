@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASU Events - Browse</title>
+
+<!-- Global Styles -->
+<style>
+:root{
+  --bg:          #8C1D40; /* ASU Maroon */
+  --phone:       #0f0f0f;
+  --primary-txt: #ffffff;
+  --accent:      #FFC627; /* ASU Gold */
+  --no:          #ff5964;
+  --fav:         #42a5f5;
+  --yes:         #29c46d;
+  --reload:      #FFC627; /* ASU Gold */
+  --card-bg:     #ffffff;
+  --txt-dark:    #111827;
+  --txt-light:   #6b7280;
+  --shadow:      0 6px 20px rgba(0,0,0,.15);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+
+/* phone frame */
+.phone{
+  width:320px;height:640px;
+  background:var(--phone);
+  border-radius:36px;
+  padding:60px 16px 90px;
+  position:relative;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* top notch */
+.phone::before{
+  content:"";position:absolute;
+  top:20px;left:50%;margin-left:-70px;
+  width:140px;height:20px;
+  background:#0a0a0a;border-radius:10px;
+}
+
+/* top nav with back button */
+.nav{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-txt);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.page-title {
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  flex-grow: 1;
+}
+
+/* card view */
+#browseView {
+  flex: 1;
+  overflow: hidden;
+}
+
+.card{
+  background:var(--card-bg);
+  width:100%;height:100%;
+  border-radius:20px;
+  padding:20px 18px 110px;
+  display:flex;flex-direction:column;
+  box-shadow:var(--shadow);
+}
+
+.event-title{font-size:1.25rem;font-weight:700;color:var(--txt-dark)}
+.event-date{font-size:.9rem;color:var(--txt-light);margin-top:2px}
+.event-location{font-size:.9rem;color:var(--txt-light);margin-top:2px;font-style:italic;}
+.desc{font-size:.85rem;color:var(--txt-light);margin-top:12px;line-height:1.35;white-space:pre-line}
+
+/* action bar */
+.actions{
+  position:absolute;bottom:25px;left:50%;
+  width:260px;display:flex;justify-content:space-between;
+  transform:translateX(-50%);
+}
+.btn{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:#fff;cursor:pointer;user-select:none;
+  transition:transform .15s;border:none;
+}
+.btn:active{transform:scale(.88)}
+.no{background:var(--no)}
+.reload{background:var(--reload)}
+.calendar{background:var(--fav)}
+.yes{background:var(--yes)}
+
+.chat-button {
+  position: fixed;
+  bottom: 140px;
+  right: 40px;
+  background-color: var(--accent);
+  color: var(--phone);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- top nav with back button -->
+  <div class="nav">
+    <button class="back-btn" onclick="window.location.href='events-section.html'">←</button>
+    <h2 class="page-title">Browse Events</h2>
+    <div style="width: 20px;"></div> <!-- empty space for symmetry -->
+  </div>
+
+  <!-- BROWSE VIEW -->
+  <div id="browseView">
+    <div id="cardContainer"></div>
+
+    <div class="actions">
+      <button class="btn no"        id="noBtn">✕</button>
+      <button class="btn reload"    id="reloadBtn">⟲</button>
+      <button class="btn calendar"  id="calendarBtn">📅</button>
+      <button class="btn yes"       id="yesBtn">✓</button>
+    </div>
+  </div>
+  
+  <button class="chat-button">💬</button>
+</div>
+
+<!-- DATA + JS -->
+<script>
+/*  Example events  */
+const events = [
+  {
+    title: "Hidden Gems Career Fair",
+    date: "April 25, 2025 • 10:00 AM - 2:00 PM",
+    location: "Memorial Union, Second Floor",
+    desc: "Discover unique internship opportunities and jobs from companies you may not have considered before.\n\nConnect with recruiters from startups and mid-size companies looking specifically for ASU talent. Professional attire recommended."
+  },
+  {
+    title: "Tech Interview Workshop",
+    date: "April 27, 2025 • 4:00 PM - 6:00 PM",
+    location: "Computing Commons, Room 120",
+    desc: "Learn how to ace technical interviews from industry professionals.\n\nTopics include: algorithm challenges, behavioral questions, and portfolio presentation. Bring your laptop for hands-on practice."
+  },
+  {
+    title: "Networking Night: Business & Finance",
+    date: "May 1, 2025 • 6:30 PM - 8:30 PM",
+    location: "W. P. Carey Building, Avnet Lounge",
+    desc: "Meet alumni and industry professionals in business, finance, and consulting.\n\nMingle with representatives from top companies in a casual setting. Light refreshments will be served. Business casual attire."
+  },
+  {
+    title: "Graduate School Fair",
+    date: "May 3, 2025 • 11:00 AM - 3:00 PM",
+    location: "Student Pavilion, Main Hall",
+    desc: "Explore graduate program options from over 50 universities.\n\nLearn about admission requirements, funding opportunities, and application timelines. Representatives from law, medical, engineering, and humanities programs will be present."
+  },
+  {
+    title: "Resume Review Day",
+    date: "May 8, 2025 • 9:00 AM - 4:00 PM",
+    location: "Student Services Building, Career Center",
+    desc: "Drop in for a 15-minute one-on-one resume critique.\n\nCareer counselors will provide personalized feedback to make your resume stand out. Bring a printed copy of your current resume. Appointments recommended but walk-ins welcome."
+  },
+  {
+    title: "International Students Job Search",
+    date: "May 10, 2025 • 2:00 PM - 4:00 PM",
+    location: "Memorial Union, Alumni Lounge",
+    desc: "Workshop specifically for international students navigating the U.S. job market.\n\nTopics include: visa considerations, OPT/CPT, finding sponsorship, and cultural workplace differences. Registration required."
+  },
+  {
+    title: "Summer Research Symposium",
+    date: "May 15, 2025 • 1:00 PM - 5:00 PM",
+    location: "Life Sciences Building, Atrium",
+    desc: "Learn about paid summer research opportunities on campus.\n\nFaculty from various departments will present their research projects and how to apply to work in their labs. Great for undergraduates looking for research experience."
+  },
+  {
+    title: "Creative Careers Panel",
+    date: "May 17, 2025 • 5:30 PM - 7:30 PM",
+    location: "Design South, Gallery",
+    desc: "Alumni working in creative fields share their career journeys.\n\nHear from designers, artists, writers, and creative directors about breaking into creative industries. Portfolio tips and networking to follow panel discussion."
+  }
+];
+
+/* -------------   STATE  ---------------- */
+let index = 0;
+let savedEvents = []; // events marked "yes"
+let calendarEvents = []; // events added to calendar
+
+/* ----------  DOM refs  ---------- */
+const cardContainer = document.getElementById('cardContainer');
+
+/* ----------  helpers  ---------- */
+function renderCard() {
+  const event = events[index];
+  cardContainer.innerHTML = `
+    <div class="card">
+      <h2 class="event-title">${event.title}</h2>
+      <p class="event-date">${event.date}</p>
+      <p class="event-location">${event.location}</p>
+      <p class="desc">${event.desc}</p>
+    </div>`;
+}
+
+function nextCard() {
+  index = (index + 1) % events.length;
+  renderCard();
+}
+
+// Load any existing data from localStorage
+function loadData() {
+  const savedData = localStorage.getItem('savedEvents');
+  const calData = localStorage.getItem('calendarEvents');
+  
+  if (savedData) {
+    savedEvents = JSON.parse(savedData);
+  }
+  
+  if (calData) {
+    calendarEvents = JSON.parse(calData);
+  }
+}
+
+// Save data to localStorage
+function saveData() {
+  localStorage.setItem('savedEvents', JSON.stringify(savedEvents));
+  localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+}
+
+/* ----------  event handlers  ---------- */
+document.getElementById('yesBtn').onclick = () => {
+  savedEvents.push(events[index]);
+  saveData();
+  nextCard();
+};
+
+document.getElementById('noBtn').onclick = nextCard;
+
+document.getElementById('calendarBtn').onclick = () => {
+  calendarEvents.push(events[index]);
+  saveData();
+  nextCard();
+};
+
+document.getElementById('reloadBtn').onclick = () => {
+  // Clear all saved data
+  localStorage.removeItem('savedEvents');
+  localStorage.removeItem('calendarEvents');
+  // Reset arrays
+  savedEvents = [];
+  calendarEvents = [];
+  // Reload page
+  window.location.reload();
+};
+
+/* init */
+loadData();
+renderCard();
